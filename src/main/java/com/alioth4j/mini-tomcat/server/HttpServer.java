@@ -38,8 +38,10 @@ public class HttpServer {
                 Request request = new Request(input);
                 request.parse();
 
-                Response response = new Response(output, request.getUri());
-                response.sendStaticResource();
+                Response response = new Response(output);
+
+                StaticResourceProcessor processor = new StaticResourceProcessor();
+                processor.process(request, response);
 
                 socket.close();
             } catch (IOException e) {
