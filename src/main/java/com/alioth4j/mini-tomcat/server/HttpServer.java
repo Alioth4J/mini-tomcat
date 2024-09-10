@@ -39,9 +39,15 @@ public class HttpServer {
                 request.parse();
 
                 Response response = new Response(output);
-
-                StaticResourceProcessor processor = new StaticResourceProcessor();
-                processor.process(request, response);
+                if (request.getUri().startsWith("/servlet/")) {
+                    // 动态资源
+                    ServletProcessor servletProcessor = new ServletProcessor();
+                    servletProcessor.process(request, response);
+                } else {
+                    // 静态资源
+                    StaticResourceProcessor processor = new StaticResourceProcessor();
+                    processor.process(request, response);
+                }
 
                 socket.close();
             } catch (IOException e) {

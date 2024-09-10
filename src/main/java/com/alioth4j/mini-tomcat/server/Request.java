@@ -13,19 +13,17 @@ public class Request {
     }
 
     public void parse() {
-        StringBuffer request = new StringBuffer(2048);
-        int i;
+        StringBuilder request = new StringBuilder(2048);
         byte[] buffer = new byte[2048];
+        int byteRead;
         try {
-            i = input.read(buffer);
+            byteRead = this.input.read(buffer);
+            for (int j = 0; j < byteRead; j++) {
+                request.append((char) buffer[j]);
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            i = -1;
         }
-        for (int j = 0; j < i; j++) {
-            request.append((char) buffer[j]);
-        }
-
         this.uri = parseUri(request.toString());
     }
 
