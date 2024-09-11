@@ -69,9 +69,12 @@ public class HttpConnector implements Runnable {
 
     private HttpProcessor newProcessor() {
         HttpProcessor processor = new HttpProcessor();
-        processors.push(processor);
-        curProcessors++;
-        return processors.pop();
+        // 可重入锁
+        synchronized (processors) {
+            processors.push(processor);
+            curProcessors++;
+            return processors.pop();
+        }
     }
 
 }
