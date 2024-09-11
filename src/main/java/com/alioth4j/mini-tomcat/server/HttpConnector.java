@@ -32,7 +32,8 @@ public class HttpConnector implements Runnable {
         }
         // 初始化 Processors 池
         for (int i = 0; i < minProcessors; i++) {
-            HttpProcessor processor = new HttpProcessor();
+            HttpProcessor processor = new HttpProcessor(this);
+            processor.start();
             processors.push(processor);
             curProcessors++;
         }
@@ -46,9 +47,8 @@ public class HttpConnector implements Runnable {
                     socket.close();
                     continue;
                 }
-                processor.process(socket);
-                processors.push(processor);
-                socket.close();
+                processor.assign(socket);
+//                socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -68,13 +68,18 @@ public class HttpConnector implements Runnable {
     }
 
     private HttpProcessor newProcessor() {
-        HttpProcessor processor = new HttpProcessor();
+        HttpProcessor processor = new HttpProcessor(this);
+        processor.start();
         // 可重入锁
         synchronized (processors) {
             processors.push(processor);
             curProcessors++;
             return processors.pop();
         }
+    }
+
+    public void recycle(HttpProcessor processor) {
+        processors.push(processor);
     }
 
 }
