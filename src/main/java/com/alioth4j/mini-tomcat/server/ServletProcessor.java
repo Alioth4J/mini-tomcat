@@ -34,7 +34,7 @@ public class ServletProcessor {
             """;
 
     // TODO FIX UNKNOWN BUG(S)
-    public void process(Request request, Response response) {
+    public void process(HttpRequest request, Response response) {
         String uri = request.getUri();
         String servletName = uri.substring(uri.lastIndexOf('/') + 1);
         PrintWriter writer = null;

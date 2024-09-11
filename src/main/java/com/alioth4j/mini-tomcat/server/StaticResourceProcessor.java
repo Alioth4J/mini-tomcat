@@ -33,7 +33,7 @@ public class StaticResourceProcessor {
             <h1>File Not Found</h1>
             """;
 
-    public void process(Request request, Response response){
+    public void process(HttpRequest request, Response response){
         OutputStream output = response.getOutput();
         File file = new File(HttpServer.WEB_ROOT, request.getUri());
         if (file.exists()) {

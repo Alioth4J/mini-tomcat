@@ -54,8 +54,8 @@ public class HttpProcessor implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Request request = new Request(input);
-        request.parse();
+        HttpRequest request = new HttpRequest(input);
+        request.parse(socket);
         Response response = new Response(output);
         if (request.getUri().startsWith("/servlet/")) {
             // 动态资源
