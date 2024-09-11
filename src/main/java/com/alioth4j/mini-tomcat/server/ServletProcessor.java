@@ -2,13 +2,14 @@ package server;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -36,7 +37,13 @@ public class ServletProcessor {
     public void process(Request request, Response response) {
         String uri = request.getUri();
         String servletName = uri.substring(uri.lastIndexOf('/') + 1);
-        OutputStream output = response.getOutput();
+        PrintWriter writer = null;
+        try {
+            response.setCharacterEncoding("UTF-8");
+            writer = response.getWriter();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         URLClassLoader loader = null;
         Servlet servlet = null;
         try {
@@ -50,13 +57,8 @@ public class ServletProcessor {
             servlet = (Servlet) servletClass.newInstance();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            try {
-                output.write(servletNotFoundMessage.getBytes(StandardCharsets.UTF_8));
-                output.flush();
-                return;
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            writer.println(servletNotFoundMessage);
+            return;
         } catch (IOException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         } finally {
@@ -70,10 +72,12 @@ public class ServletProcessor {
         try {
             // response head
             String responseHead = composeResponseHead();
-            output.write(responseHead.getBytes(StandardCharsets.UTF_8));
+            writer.println(responseHead);
             // response body
             servlet.service(request, response);
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ServletException e) {
             e.printStackTrace();
         }
     }
