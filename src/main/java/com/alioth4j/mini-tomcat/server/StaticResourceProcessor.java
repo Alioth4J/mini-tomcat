@@ -33,13 +33,17 @@ public class StaticResourceProcessor {
             <h1>File Not Found</h1>
             """;
 
-    public void process(Request request, Response response) throws IOException {
+    public void process(Request request, Response response){
         OutputStream output = response.getOutput();
         File file = new File(HttpServer.WEB_ROOT, request.getUri());
         if (file.exists()) {
             // response head
             String head = composeResponseHead(file);
-            output.write(head.getBytes(StandardCharsets.UTF_8));
+            try {
+                output.write(head.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             // response body
             try (FileInputStream fis = new FileInputStream(file)) {
                 byte[] buffer = new byte[BUFFER_SIZE];
@@ -49,10 +53,16 @@ public class StaticResourceProcessor {
                     bytesRead = fis.read(buffer, 0, BUFFER_SIZE);
                 }
                 output.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         } else {
-            output.write(fileNotFoundMessage.getBytes(StandardCharsets.UTF_8));
-            output.flush();
+            try {
+                output.write(fileNotFoundMessage.getBytes(StandardCharsets.UTF_8));
+                output.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
