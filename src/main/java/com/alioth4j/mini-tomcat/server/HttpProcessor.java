@@ -56,7 +56,8 @@ public class HttpProcessor implements Runnable {
         }
         HttpRequest request = new HttpRequest(input);
         request.parse(socket);
-        Response response = new Response(output);
+        HttpResponse response = new HttpResponse(output);
+        response.setRequest(request);
         if (request.getUri().startsWith("/servlet/")) {
             // 动态资源
             ServletProcessor servletProcessor = new ServletProcessor();

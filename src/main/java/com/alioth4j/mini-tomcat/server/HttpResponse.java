@@ -4,12 +4,111 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpResponse implements HttpServletResponse {
+
+    HttpRequest request;
+    OutputStream output;
+    PrintWriter writer;
+
+    String contentType = null;
+    long contentLength = -1;
+    String charset = null;
+    String characterEncoding = null;
+    String protocol = "HTTP/1.1";
+
+    Map<String, String> headers = new ConcurrentHashMap<>();
+    int status = HttpServletResponse.SC_OK;
+    String message = getStatusMessage(HttpServletResponse.SC_OK);
+
+    public HttpResponse(OutputStream output) {
+        this.output = output;
+    }
+
+    public void setRequest(HttpRequest request) {
+        this.request = request;
+    }
+
+    protected String getStatusMessage(int status) {
+        switch (status) {
+            case SC_OK:
+                return "OK";
+            case SC_ACCEPTED:
+                return "Accepted";
+            case SC_BAD_GATEWAY:
+                return ("Bad Gateway");
+            case SC_BAD_REQUEST:
+                return ("Bad Request");
+            case SC_CONTINUE:
+                return ("Continue");
+            case SC_FORBIDDEN:
+                return ("Forbidden");
+            case SC_INTERNAL_SERVER_ERROR:
+                return ("Internal Server Error");
+            case SC_METHOD_NOT_ALLOWED:
+                return ("Method Not Allowed");
+            case SC_NOT_FOUND:
+                return ("Not Found");
+            case SC_NOT_IMPLEMENTED:
+                return ("Not Implemented");
+            case SC_REQUEST_URI_TOO_LONG:
+                return ("Request URI Too Long");
+            case SC_SERVICE_UNAVAILABLE:
+                return ("Service Unavailable");
+            case SC_UNAUTHORIZED:
+                return ("Unauthorized");
+            default:
+                return "HTTP Response Status " + status;
+        }
+    }
+
+    public void sendHeaders() throws IOException {
+        PrintWriter outputWriter = getWriter();
+        outputWriter.print(getProtocol());
+        outputWriter.print(" ");
+        outputWriter.print(status);
+        if (message != null) {
+            outputWriter.print(" ");
+            outputWriter.print(message);
+        }
+        outputWriter.print("\r\n");
+
+        if (getContentType() != null) {
+            outputWriter.print("Content-Type: " + getContentType() + "\r\n");
+        }
+        if (getContentLength() >= 0) {
+            outputWriter.print("Content-Length: " + getContentLength() + "\r\n");
+        }
+        Iterator<String> names = headers.keySet().iterator();
+        while (names.hasNext()) {
+            String name = names.next();
+            String value = headers.get(name);
+            outputWriter.print(name);
+            outputWriter.print(": ");
+            outputWriter.print(value);
+            outputWriter.print("\r\n");
+        }
+
+        outputWriter.print("\r\n");
+        outputWriter.flush();
+    }
+
+    public OutputStream getOutput() {
+        return output;
+    }
+
+    public long getContentLength() {
+        return contentLength;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
 
     @Override
     public void addCookie(Cookie cookie) {
@@ -18,7 +117,7 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public boolean containsHeader(String name) {
-        return false;
+        return this.headers.containsKey(name);
     }
 
     @Override
@@ -68,27 +167,52 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void setHeader(String name, String value) {
-
+        headers.put(name, value);
+        if (DefaultHeaders.CONTENT_LENGTH_NAME.equals(name.toLowerCase())) {
+            setContentLength(Integer.parseInt(value));
+        }
+        if (DefaultHeaders.CONTENT_TYPE_NAME.equals(name.toLowerCase())) {
+            setContentType(value);
+        }
     }
 
     @Override
     public void addHeader(String name, String value) {
-
+        headers.put(name, value);
+        if (DefaultHeaders.CONTENT_LENGTH_NAME.equals(name.toLowerCase())) {
+            setContentLength(Integer.parseInt(value));
+        }
+        if (DefaultHeaders.CONTENT_TYPE_NAME.equals(name.toLowerCase())) {
+            setContentType(value);
+        }
     }
 
     @Override
     public void setIntHeader(String name, int value) {
-
+        headers.put(name, String.valueOf(value));
+        if (DefaultHeaders.CONTENT_LENGTH_NAME.equals(name.toLowerCase())) {
+            setContentLength(value);
+        }
+        if (DefaultHeaders.CONTENT_TYPE_NAME.equals(name.toLowerCase())) {
+            setContentType(String.valueOf(value));
+        }
     }
 
     @Override
     public void addIntHeader(String name, int value) {
-
+        headers.put(name, String.valueOf(value));
+        if (DefaultHeaders.CONTENT_LENGTH_NAME.equals(name.toLowerCase())) {
+            setContentLength(value);
+        }
+        if (DefaultHeaders.CONTENT_TYPE_NAME.equals(name.toLowerCase())) {
+            setContentType(String.valueOf(value));
+        }
     }
 
     @Override
     public void setStatus(int sc) {
-
+        this.status = sc;
+        this.message = getStatusMessage(sc);
     }
 
     @Override
@@ -98,17 +222,17 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public int getStatus() {
-        return 0;
+        return this.status;
     }
 
     @Override
     public String getHeader(String name) {
-        return "";
+        return this.headers.get(name);
     }
 
     @Override
     public Collection<String> getHeaders(String name) {
-        return List.of();
+        return this.headers.keySet();
     }
 
     @Override
@@ -118,12 +242,12 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public String getCharacterEncoding() {
-        return "";
+        return this.characterEncoding;
     }
 
     @Override
     public String getContentType() {
-        return "";
+        return this.contentType;
     }
 
     @Override
@@ -133,27 +257,28 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        return null;
+        this.writer = new PrintWriter(new OutputStreamWriter(output, getCharacterEncoding()), true);
+        return this.writer;
     }
 
     @Override
     public void setCharacterEncoding(String charset) {
-
+        this.characterEncoding = charset;
     }
 
     @Override
     public void setContentLength(int len) {
-
+        this.contentLength = len;
     }
 
     @Override
     public void setContentLengthLong(long len) {
-
+        this.contentLength = len;
     }
 
     @Override
     public void setContentType(String type) {
-
+        this.contentType = type;
     }
 
     @Override
