@@ -70,11 +70,9 @@ public class ServletProcessor {
         }
 
         try {
-            // response head
-            String responseHead = composeResponseHead();
-            writer.println(responseHead);
-            // response body
-            servlet.service(request, response);
+            HttpRequestFacade requestFacade = new HttpRequestFacade(request);
+            HttpResponseFacade responseFacade = new HttpResponseFacade(response);
+            servlet.service(requestFacade, responseFacade);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ServletException e) {
