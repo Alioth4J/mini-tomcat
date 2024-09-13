@@ -1,9 +1,11 @@
 package server;
 
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class SocketInputStream extends InputStream {
+public class SocketInputStream extends ServletInputStream {
 
     private static final byte CR = (byte) '\r';
     private static final byte LF = (byte) '\n';
@@ -99,7 +101,7 @@ public class SocketInputStream extends InputStream {
             }
             pos++;
         }
-        requestLine.setProtocolEnd(readCount - 1);
+        requestLine.setProtocolEnd(readCount);
     }
 
     public void readRequestHeader(HttpRequestHeader requestHeader) throws IOException {
@@ -231,6 +233,21 @@ public class SocketInputStream extends InputStream {
         is.close();
         is = null;
         buf = null;
+    }
+
+    @Override
+    public boolean isFinished() {
+        return false;
+    }
+
+    @Override
+    public boolean isReady() {
+        return false;
+    }
+
+    @Override
+    public void setReadListener(ReadListener readListener) {
+
     }
 
 }
