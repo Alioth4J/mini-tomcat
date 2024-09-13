@@ -54,8 +54,14 @@ public class HttpProcessor implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // HTTP request
         HttpRequest request = new HttpRequest(input);
         request.parse(socket);
+        // handle session
+        if (request.getSessionId() == null || request.getSessionId().equals("")) {
+            request.getSession(true);
+        }
+        // HTTP response
         HttpResponse response = new HttpResponse(output);
         response.setRequest(request);
         if (request.getUri().startsWith("/servlet/")) {

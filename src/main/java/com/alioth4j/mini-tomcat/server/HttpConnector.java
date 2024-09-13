@@ -1,11 +1,12 @@
 package server;
 
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class HttpConnector implements Runnable {
 
@@ -14,6 +15,8 @@ public class HttpConnector implements Runnable {
     private int curProcessors = 0;
 
     private Deque<HttpProcessor> processors = new ArrayDeque<>();
+
+    public static Map<String, HttpSession> sessions = new HashMap<>();
 
     public void start() {
         new Thread(this).start();
@@ -80,6 +83,44 @@ public class HttpConnector implements Runnable {
 
     public void recycle(HttpProcessor processor) {
         processors.push(processor);
+    }
+
+    public static Session createSession() {
+        Session session = new Session();
+        session.setValid(true);
+        session.setCreationTime(System.currentTimeMillis());
+        String sessionId = generateSessionId();
+        session.setId(sessionId);
+        sessions.put(sessionId, session);
+        return session;
+    }
+
+    protected static synchronized String generateSessionId() {
+        Random random = new Random();
+        long seed = System.currentTimeMillis();
+        random.setSeed(seed);
+        byte[] bytes = new byte[16];
+        random.nextBytes(bytes);
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < bytes.length; i++) {
+            byte b1 = (byte) ((bytes[i] & 0xf0) >> 4);
+            byte b2 = (byte) (bytes[i] & 0x0f);
+            if (b1 < 10) {
+                result.append((char) ('0' + b1));
+            } else {
+                result.append((char) ('A' + (b1 - 10)));
+            }
+            if (b2 < 10) {
+                result.append((char) ('0' + b2));
+            } else {
+                result.append((char) ('A' + b2 - 10));
+            }
+        }
+        return result.toString();
+    }
+
+    public static Map<String, HttpSession> getSessions() {
+        return sessions;
     }
 
 }
