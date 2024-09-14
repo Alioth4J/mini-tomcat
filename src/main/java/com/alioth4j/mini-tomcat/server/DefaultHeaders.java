@@ -9,6 +9,6 @@ public class DefaultHeaders {
     static final String CONTENT_TYPE_NAME = "content-type";
     static final String TRANSFER_ENCODING_NAME = "transfer-encoding";
     static final String COOKIE_NAME = "Cookie";
-    static final String JSESSIONID_NAME = ";jsessionid=";
+    static final String JSESSIONID_NAME = "jsessionid";
 
 }

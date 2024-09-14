@@ -3,6 +3,7 @@ package server;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -25,6 +26,8 @@ public class HttpResponse implements HttpServletResponse {
     Map<String, String> headers = new ConcurrentHashMap<>();
     int status = HttpServletResponse.SC_OK;
     String message = getStatusMessage(HttpServletResponse.SC_OK);
+
+    List<Cookie> cookies = new ArrayList<>();
 
     public HttpResponse(OutputStream output) {
         this.output = output;
@@ -93,9 +96,31 @@ public class HttpResponse implements HttpServletResponse {
             outputWriter.print(value);
             outputWriter.print("\r\n");
         }
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Cookie cookie = new Cookie(DefaultHeaders.JSESSIONID_NAME, session.getId());
+            cookie.setMaxAge(-1);
+            addCookie(cookie);
+        }
+        synchronized (cookies) {
+            Iterator<Cookie> items = cookies.iterator();
+            while (items.hasNext()) {
+                Cookie cookie = items.next();
+                outputWriter.print(CookieTools.getCookieHeaderName(cookie));
+                outputWriter.print(": ");
+                StringBuffer sbValue = new StringBuffer();
+                CookieTools.getCookieHeaderValue(cookie, sbValue);
+                outputWriter.print(sbValue.toString());
+                outputWriter.print("\r\n");
+            }
+        }
 
         outputWriter.print("\r\n");
         outputWriter.flush();
+    }
+
+    public void finishResponse() {
+        this.writer.flush();
     }
 
     public OutputStream getOutput() {
@@ -112,7 +137,9 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void addCookie(Cookie cookie) {
-
+        synchronized (cookies) {
+            cookies.add(cookie);
+        }
     }
 
     @Override

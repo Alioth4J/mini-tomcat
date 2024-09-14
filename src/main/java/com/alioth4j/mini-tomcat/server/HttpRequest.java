@@ -30,9 +30,15 @@ public class HttpRequest implements HttpServletRequest {
     String sessionid;
     SessionFacade sessionFacade;
 
+    private HttpResponse response;
+
     public HttpRequest(InputStream input) {
         this.input = input;
         this.sis = new SocketInputStream(this.input, 2048);
+    }
+
+    public void setResponse(HttpResponse response) {
+        this.response = response;
     }
 
     public void parse(Socket socket) {
@@ -50,9 +56,17 @@ public class HttpRequest implements HttpServletRequest {
         if (question >= 0) {
             queryString = new String(requestLine.getUri(), question + 1, requestLine.getUriEnd() - question - 1);
             uri = new String(requestLine.getUri(), 0, question);
+
         } else {
             queryString = null;
             uri = new String(requestLine.getUri(), 0, requestLine.getUriEnd());
+        }
+        // 从 uri 中得到 sessionid
+        String tmp = ";" + DefaultHeaders.JSESSIONID_NAME + "=";
+        int semicolon = uri.indexOf(tmp);
+        if (semicolon >= 0) {
+            sessionid = uri.substring(semicolon + tmp.length());
+            uri = uri.substring(0, semicolon);
         }
     }
 
@@ -65,6 +79,7 @@ public class HttpRequest implements HttpServletRequest {
             }
             String name = new String(header.getName(), 0 , header.getNameEnd());
             String value = new String(header.getValue(), 0, header.getValueEnd());
+            name = name.toLowerCase();
 
             if (DefaultHeaders.ACCEPT_LANGUAGE_NAME.equals(name)) {
                 headers.put(name, value);
