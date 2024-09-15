@@ -37,6 +37,11 @@ public class HttpRequest implements HttpServletRequest {
         this.sis = new SocketInputStream(this.input, 2048);
     }
 
+    public void setStream(InputStream input) {
+        this.input = input;
+        this.sis = new SocketInputStream(this.input, 2048);
+    }
+
     public void setResponse(HttpResponse response) {
         this.response = response;
     }
@@ -91,6 +96,9 @@ public class HttpRequest implements HttpServletRequest {
                 headers.put(name, value);
             } else if (DefaultHeaders.CONNECTION_NAME.equals(name)) {
                 headers.put(name, value);
+                if ("close".equals(value)) {
+                    response.setHeader("Connection", "close");
+                }
             } else if (DefaultHeaders.TRANSFER_ENCODING_NAME.equals(name)) {
                 headers.put(name, value);
             } else if (DefaultHeaders.COOKIE_NAME.equals(name)) {
@@ -102,14 +110,13 @@ public class HttpRequest implements HttpServletRequest {
                         this.sessionid = cookies[i].getValue();
                     }
                 }
-            }
-            else {
+            } else {
                 headers.put(name, value);
             }
         }
     }
 
-    protected void parseRequestParameters() {
+    protected void parseParameters() {
         String encoding = getCharacterEncoding();
         if (encoding == null) {
             encoding = "ISO-8859-1";
@@ -119,16 +126,46 @@ public class HttpRequest implements HttpServletRequest {
             byte[] bytes = null;
             try {
                 bytes = qString.getBytes(encoding);
-                parseRequestParameters(this.parameters, bytes, encoding);
+                parseParameters(this.parameters, bytes, encoding);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
-
-        // TODO
+        String contentType = getContentType();
+        if (contentType == null) {
+            contentType = "";
+        }
+        int semicolon = contentType.indexOf(";");
+        if (semicolon >= 0) {
+            contentType = contentType.substring(0, semicolon).trim();
+        } else {
+            contentType = contentType.trim();
+        }
+        if ("POST".equals(getMethod()) && getContentLength() > 0 && "application/x-www-form-unlencoded".equals(contentType)) {
+            try {
+                int max = getContentLength();
+                int len = 0;
+                byte[] buf = new byte[getContentLength()];
+                ServletInputStream is = getInputStream();
+                while (len < max) {
+                    int next = is.read(buf, len, max - len);
+                    if (next < 0) {
+                        break;
+                    }
+                    len += next;
+                }
+                is.close();
+                if (len < max) {
+                    throw new RuntimeException("Content length mismatch");
+                }
+                parseParameters(this.parameters, buf, encoding);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void parseRequestParameters(Map<String, String[]> map, byte[] data, String encoding) throws UnsupportedEncodingException {
+    public void parseParameters(Map<String, String[]> map, byte[] data, String encoding) throws UnsupportedEncodingException {
         if (parsed) {
             return;
         }
@@ -430,7 +467,7 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-        return "";
+        return headers.get(DefaultHeaders.TRANSFER_ENCODING_NAME);
     }
 
     @Override
@@ -440,27 +477,27 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public int getContentLength() {
-        return 0;
+        return Integer.parseInt(headers.get(DefaultHeaders.CONTENT_LENGTH_NAME));
     }
 
     @Override
     public long getContentLengthLong() {
-        return 0;
+        return Long.parseLong(headers.get(DefaultHeaders.CONTENT_LENGTH_NAME));
     }
 
     @Override
     public String getContentType() {
-        return "";
+        return headers.get(DefaultHeaders.CONTENT_TYPE_NAME);
     }
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        return null;
+        return this.sis;
     }
 
     @Override
     public String getParameter(String name) {
-        parseRequestParameters();
+        parseParameters();
         String[] values = parameters.get(name);
         if (values == null) {
             return null;
@@ -470,20 +507,20 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public Enumeration<String> getParameterNames() {
-        parseRequestParameters();
+        parseParameters();
         return Collections.enumeration(parameters.keySet());
     }
 
     @Override
     public String[] getParameterValues(String name) {
-        parseRequestParameters();
+        parseParameters();
         String[] values = parameters.get(name);
         return values;
     }
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        parseRequestParameters();
+        parseParameters();
         return this.parameters;
     }
 

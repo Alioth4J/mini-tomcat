@@ -11,6 +11,9 @@ public class HttpProcessor implements Runnable {
 
     private volatile boolean available = false;
     private Socket socket;
+    private int serverPort = 0;
+    private boolean keepAlive = false;
+    private boolean http11 = true;
 
     public HttpProcessor(HttpConnector connector) {
         this.connector = connector;
@@ -51,34 +54,44 @@ public class HttpProcessor implements Runnable {
         try {
             input = socket.getInputStream();
             output = socket.getOutputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // HTTP request
-        HttpRequest request = new HttpRequest(input);
-        request.parse(socket);
-        // handle session
-        if (request.getSessionId() == null || request.getSessionId().equals("")) {
-            request.getSession(true);
-        }
-        // HTTP response
-        HttpResponse response = new HttpResponse(output);
-        response.setRequest(request);
-        request.setResponse(response);
-        try {
-            response.sendHeaders();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            keepAlive = true;
+            while (keepAlive) {
+                // HTTP request
+                HttpRequest request = new HttpRequest(input);
+                request.parse(socket);
+                // handle session
+                if (request.getSessionId() == null || request.getSessionId().equals("")) {
+                    request.getSession(true);
+                }
+                // HTTP response
+                HttpResponse response = new HttpResponse(output);
+                response.setRequest(request);
+                request.setResponse(response);
+                try {
+                    response.sendHeaders();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-        if (request.getUri().startsWith("/servlet/")) {
-            // 动态资源
-            ServletProcessor servletProcessor = new ServletProcessor();
-            servletProcessor.process(request, response);
-        } else {
-            // 静态资源
-            StaticResourceProcessor processor = new StaticResourceProcessor();
-            processor.process(request, response);
+                if (request.getUri().startsWith("/servlet/")) {
+                    // 动态资源
+                    ServletProcessor servletProcessor = new ServletProcessor();
+                    servletProcessor.process(request, response);
+                } else {
+                    // 静态资源
+                    StaticResourceProcessor processor = new StaticResourceProcessor();
+                    processor.process(request, response);
+                }
+
+                finishResponse(response);
+                if ("close".equals(response.getHeader("Connection"))) {
+                    keepAlive = false;
+                }
+            }
+            socket.close();
+            socket = null;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -93,6 +106,10 @@ public class HttpProcessor implements Runnable {
         this.socket = socket;
         available = true;
         notifyAll();
+    }
+
+    private void finishResponse(HttpResponse response) {
+        response.finishResponse();
     }
 
 }

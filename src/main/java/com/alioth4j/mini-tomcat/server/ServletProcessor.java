@@ -4,12 +4,8 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLStreamHandler;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -44,38 +40,18 @@ public class ServletProcessor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        URLClassLoader loader = null;
         Servlet servlet = null;
         try {
-            URL[] urls = new URL[1];
-            File classPath = new File(HttpServer.WEB_ROOT);
-            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
-            URLStreamHandler streamHandler = null;
-            urls[0] = new URL(null, repository, streamHandler);
-            loader = new URLClassLoader(urls);
-            Class<?> servletClass = loader.loadClass(servletName);
+            Class<?> servletClass = HttpConnector.getLoader().loadClass(servletName);
             servlet = (Servlet) servletClass.newInstance();
+            HttpRequestFacade requestFacade = new HttpRequestFacade(request);
+            HttpResponseFacade responseFacade = new HttpResponseFacade(response);
+            servlet.service(requestFacade, responseFacade);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             writer.println(servletNotFoundMessage);
             return;
-        } catch (IOException | InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                loader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            HttpRequestFacade requestFacade = new HttpRequestFacade(request);
-            HttpResponseFacade responseFacade = new HttpResponseFacade(response);
-            servlet.service(requestFacade, responseFacade);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ServletException e) {
+        } catch (IOException | InstantiationException | IllegalAccessException | ServletException e) {
             e.printStackTrace();
         }
     }

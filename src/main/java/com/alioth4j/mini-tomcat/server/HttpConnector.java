@@ -1,11 +1,9 @@
 package server;
 
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
+import java.net.*;
 import java.util.*;
 
 public class HttpConnector implements Runnable {
@@ -17,6 +15,8 @@ public class HttpConnector implements Runnable {
     private Deque<HttpProcessor> processors = new ArrayDeque<>();
 
     public static Map<String, HttpSession> sessions = new HashMap<>();
+
+    public static URLClassLoader loader = null;
 
     public void start() {
         new Thread(this).start();
@@ -32,6 +32,17 @@ public class HttpConnector implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
+        }
+        // ClassLoader 初始化
+        try {
+            URL[] urls = new URL[1];
+            File classPath = new File(HttpServer.WEB_ROOT);
+            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
+            URLStreamHandler streamHandler = null;
+            urls[0] = new URL(null, repository, streamHandler);
+            loader = new URLClassLoader(urls);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         // 初始化 Processors 池
         for (int i = 0; i < minProcessors; i++) {
@@ -121,6 +132,10 @@ public class HttpConnector implements Runnable {
 
     public static Map<String, HttpSession> getSessions() {
         return sessions;
+    }
+
+    public static URLClassLoader getLoader() {
+        return loader;
     }
 
 }
