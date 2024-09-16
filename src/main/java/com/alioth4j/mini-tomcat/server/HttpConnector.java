@@ -16,7 +16,7 @@ public class HttpConnector implements Runnable {
 
     public static Map<String, HttpSession> sessions = new HashMap<>();
 
-    public static URLClassLoader loader = null;
+    ServletContainer container = null;
 
     public void start() {
         new Thread(this).start();
@@ -32,17 +32,6 @@ public class HttpConnector implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
-        }
-        // ClassLoader 初始化
-        try {
-            URL[] urls = new URL[1];
-            File classPath = new File(HttpServer.WEB_ROOT);
-            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
-            URLStreamHandler streamHandler = null;
-            urls[0] = new URL(null, repository, streamHandler);
-            loader = new URLClassLoader(urls);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         // 初始化 Processors 池
         for (int i = 0; i < minProcessors; i++) {
@@ -134,8 +123,12 @@ public class HttpConnector implements Runnable {
         return sessions;
     }
 
-    public static URLClassLoader getLoader() {
-        return loader;
+    public ServletContainer getContainer() {
+        return container;
+    }
+
+    public void setContainer(ServletContainer container) {
+        this.container = container;
     }
 
 }

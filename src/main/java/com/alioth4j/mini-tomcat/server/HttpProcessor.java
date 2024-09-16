@@ -1,5 +1,6 @@
 package server;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,7 +76,7 @@ public class HttpProcessor implements Runnable {
 
                 if (request.getUri().startsWith("/servlet/")) {
                     // 动态资源
-                    ServletProcessor servletProcessor = new ServletProcessor();
+                    ServletProcessor servletProcessor = new ServletProcessor(this.connector);
                     servletProcessor.process(request, response);
                 } else {
                     // 静态资源
@@ -91,6 +92,8 @@ public class HttpProcessor implements Runnable {
             socket.close();
             socket = null;
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ServletException e) {
             e.printStackTrace();
         }
     }
