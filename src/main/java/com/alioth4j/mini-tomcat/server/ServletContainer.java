@@ -16,7 +16,7 @@ public class ServletContainer {
     ClassLoader loader = null;
 
     Map<String, String> servletClsMap = new ConcurrentHashMap<>();
-    Map<String, Servlet> servletInstanceMap = new ConcurrentHashMap<>();
+    Map<String, ServletWrapper> servletInstanceMap = new ConcurrentHashMap<>();
 
     public ServletContainer() {
         // ClassLoader 初始化
@@ -60,31 +60,19 @@ public class ServletContainer {
     }
 
     public void invoke(HttpRequest request, HttpResponse response) throws IOException, ServletException {
-        Servlet servlet = null;
-        ClassLoader loader = getClassLoader();
+        ServletWrapper servletWrapper = null;
         String uri = request.getUri();
         String servletName = uri.substring(uri.lastIndexOf("/") + 1);
         String servletClassName = servletName;
-        servlet = servletInstanceMap.get(servletClassName);
-        if (servlet == null) {
-            try {
-                Class<?> servletClass = loader.loadClass(servletClassName);
-                servlet = (Servlet) servletClass.newInstance();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            servletClsMap.put(servletName, servletClassName);
-            servletInstanceMap.put(servletName, servlet);
-
-            servlet.init(null);
+        servletWrapper = servletInstanceMap.get(servletName);
+        if (servletWrapper == null) {
+            servletWrapper = new ServletWrapper(servletClassName, this);
+            this.servletClsMap.put(servletName, servletClassName);
+            this.servletInstanceMap.put(servletName, servletWrapper);
         }
         HttpRequestFacade requestFacade = new HttpRequestFacade(request);
         HttpResponseFacade responseFacade = new HttpResponseFacade(response);
-        servlet.service(requestFacade, responseFacade);
+        servletWrapper.invoke(requestFacade, responseFacade);
     }
 
 }
