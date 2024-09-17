@@ -1,7 +1,8 @@
 package server;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -10,7 +11,7 @@ import java.net.URLStreamHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ServletContainer {
+public class ServletContext extends ContainerBase{
 
     HttpConnector connector = null;
     ClassLoader loader = null;
@@ -18,7 +19,7 @@ public class ServletContainer {
     Map<String, String> servletClsMap = new ConcurrentHashMap<>();
     Map<String, ServletWrapper> servletInstanceMap = new ConcurrentHashMap<>();
 
-    public ServletContainer() {
+    public ServletContext() {
         // ClassLoader 初始化
         try {
             URL[] urls = new URL[1];
@@ -33,7 +34,12 @@ public class ServletContainer {
     }
 
     public String getInfo() {
-        return null;
+        return "MiniTomcat Servlet Context, version 0.1";
+    }
+
+    @Override
+    public ClassLoader getLoader() {
+        return this.loader;
     }
 
     public ClassLoader getClassLoader() {
@@ -59,9 +65,15 @@ public class ServletContainer {
     public void setName(String name) {
     }
 
-    public void invoke(HttpRequest request, HttpResponse response) throws IOException, ServletException {
+    @Override
+    public Container[] findChildren() {
+        return new Container[0];
+    }
+
+    @Override
+    public void invoke(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         ServletWrapper servletWrapper = null;
-        String uri = request.getUri();
+        String uri = ((HttpRequest) request).getUri();
         String servletName = uri.substring(uri.lastIndexOf("/") + 1);
         String servletClassName = servletName;
         servletWrapper = servletInstanceMap.get(servletName);

@@ -302,7 +302,7 @@ public class HttpRequestFacade implements HttpServletRequest {
     }
 
     @Override
-    public ServletContext getServletContext() {
+    public javax.servlet.ServletContext getServletContext() {
         return null;
     }
 

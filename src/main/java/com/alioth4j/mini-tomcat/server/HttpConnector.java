@@ -16,7 +16,7 @@ public class HttpConnector implements Runnable {
 
     public static Map<String, HttpSession> sessions = new HashMap<>();
 
-    ServletContainer container = null;
+    ServletContext Context = null;
 
     public void start() {
         new Thread(this).start();
@@ -123,12 +123,12 @@ public class HttpConnector implements Runnable {
         return sessions;
     }
 
-    public ServletContainer getContainer() {
-        return container;
+    public ServletContext getContext() {
+        return Context;
     }
 
-    public void setContainer(ServletContainer container) {
-        this.container = container;
+    public void setContext(ServletContext Context) {
+        this.Context = Context;
     }
 
 }

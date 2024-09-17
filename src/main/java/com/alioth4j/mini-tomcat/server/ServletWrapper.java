@@ -6,15 +6,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class ServletWrapper {
+public class ServletWrapper extends ContainerBase {
 
     private Servlet instance;
     private String servletClass;
     private ClassLoader loader;
     private String name;
-    protected ServletContainer parent = null;
+    protected Container parent = null;
 
-    public ServletWrapper(String servletClass, ServletContainer parent) {
+    public ServletWrapper(String servletClass, ServletContext parent) {
         this.parent = parent;
         this.servletClass = servletClass;
         try {
@@ -76,28 +76,57 @@ public class ServletWrapper {
         this.servletClass = servletClass;
     }
 
-    public ClassLoader getLoader() {
-        return loader;
-    }
-
+    @Override
     public void setLoader(ClassLoader loader) {
         this.loader = loader;
     }
 
+    @Override
+    public ClassLoader getLoader() {
+        return loader;
+    }
+
+    @Override
+    public String getInfo() {
+        return "MiniTomcat Servlet Wrapper, version 0.1";
+    }
+
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    public ServletContainer getParent() {
+    @Override
+    public Container getParent() {
         return parent;
     }
 
-    public void setParent(ServletContainer parent) {
-        this.parent = parent;
+    @Override
+    public void setParent(Container container) {
+        this.parent = container;
+    }
+
+    @Override
+    public void addChild(Container child) {
+    }
+
+    @Override
+    public Container findChild(String name) {
+        return null;
+    }
+
+    @Override
+    public Container[] findChildren() {
+        return new Container[0];
+    }
+
+    @Override
+    public void removeChild(Container child) {
     }
 
 }

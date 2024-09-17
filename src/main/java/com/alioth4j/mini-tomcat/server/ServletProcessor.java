@@ -12,7 +12,7 @@ public class ServletProcessor {
     }
 
     public void process(HttpRequest request, HttpResponse response) throws ServletException, IOException {
-        this.connector.getContainer().invoke(request, response);
+        this.connector.getContext().invoke(request, response);
     }
 
 }
