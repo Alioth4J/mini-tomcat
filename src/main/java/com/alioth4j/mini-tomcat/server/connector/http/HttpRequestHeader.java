@@ -1,4 +1,4 @@
-package server;
+package server.connector.http;
 
 /**
  * 对应 HTTP 请求头的一个键值对

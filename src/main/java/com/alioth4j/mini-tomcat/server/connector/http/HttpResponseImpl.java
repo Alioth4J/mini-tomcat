@@ -1,4 +1,6 @@
-package server;
+package server.connector.http;
+
+import server.util.CookieTools;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -11,9 +13,9 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class HttpResponse implements HttpServletResponse {
+public class HttpResponseImpl implements HttpServletResponse {
 
-    HttpRequest request;
+    HttpRequestImpl request;
     OutputStream output;
     PrintWriter writer;
 
@@ -29,11 +31,11 @@ public class HttpResponse implements HttpServletResponse {
 
     List<Cookie> cookies = new ArrayList<>();
 
-    public HttpResponse(OutputStream output) {
+    public HttpResponseImpl(OutputStream output) {
         this.output = output;
     }
 
-    public void setRequest(HttpRequest request) {
+    public void setRequest(HttpRequestImpl request) {
         this.request = request;
     }
 

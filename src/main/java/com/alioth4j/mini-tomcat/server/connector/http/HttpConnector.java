@@ -1,7 +1,9 @@
-package server;
+package server.connector.http;
+
+import server.core.StandardContext;
+import server.session.StandardSession;
 
 import javax.servlet.http.HttpSession;
-import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -16,7 +18,7 @@ public class HttpConnector implements Runnable {
 
     public static Map<String, HttpSession> sessions = new HashMap<>();
 
-    ServletContext Context = null;
+    StandardContext Context = null;
 
     public void start() {
         new Thread(this).start();
@@ -85,8 +87,8 @@ public class HttpConnector implements Runnable {
         processors.push(processor);
     }
 
-    public static Session createSession() {
-        Session session = new Session();
+    public static StandardSession createSession() {
+        StandardSession session = new StandardSession();
         session.setValid(true);
         session.setCreationTime(System.currentTimeMillis());
         String sessionId = generateSessionId();
@@ -123,11 +125,11 @@ public class HttpConnector implements Runnable {
         return sessions;
     }
 
-    public ServletContext getContext() {
+    public StandardContext getContext() {
         return Context;
     }
 
-    public void setContext(ServletContext Context) {
+    public void setContext(StandardContext Context) {
         this.Context = Context;
     }
 

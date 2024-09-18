@@ -1,4 +1,6 @@
-package server;
+package server.core;
+
+import server.Container;
 
 import java.util.HashMap;
 import java.util.Map;

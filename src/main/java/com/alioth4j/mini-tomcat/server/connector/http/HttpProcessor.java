@@ -1,4 +1,4 @@
-package server;
+package server.connector.http;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -58,14 +58,14 @@ public class HttpProcessor implements Runnable {
             keepAlive = true;
             while (keepAlive) {
                 // HTTP request
-                HttpRequest request = new HttpRequest(input);
+                HttpRequestImpl request = new HttpRequestImpl(input);
                 request.parse(socket);
                 // handle session
                 if (request.getSessionId() == null || request.getSessionId().equals("")) {
                     request.getSession(true);
                 }
                 // HTTP response
-                HttpResponse response = new HttpResponse(output);
+                HttpResponseImpl response = new HttpResponseImpl(output);
                 response.setRequest(request);
                 request.setResponse(response);
                 try {
@@ -111,7 +111,7 @@ public class HttpProcessor implements Runnable {
         notifyAll();
     }
 
-    private void finishResponse(HttpResponse response) {
+    private void finishResponse(HttpResponseImpl response) {
         response.finishResponse();
     }
 

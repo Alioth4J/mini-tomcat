@@ -1,4 +1,4 @@
-package server;
+package server.connector;
 
 import javax.servlet.*;
 import javax.servlet.http.*;

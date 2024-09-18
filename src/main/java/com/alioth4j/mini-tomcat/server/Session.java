@@ -1,119 +1,26 @@
 package server;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionContext;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class Session implements HttpSession {
+public interface Session {
 
-    private String sessionid;
-    private long creationTime;
-    private boolean valid;
-    private Map<String, Object> attributes = new ConcurrentHashMap<>();
+    public static final String SESSION_CREATE_EVENT = "createSession";
+    public static final String SESSION_DESTROYED_EVENT = "destroySession";
 
-    public void setSessionid(String sessionid) {
-        this.sessionid = sessionid;
-    }
-
-    public void setCreationTime(long creationTime) {
-        this.creationTime = creationTime;
-    }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
-
-    @Override
-    public long getCreationTime() {
-        return this.creationTime;
-    }
-
-    @Override
-    public String getId() {
-        return this.sessionid;
-    }
-
-    @Override
-    public long getLastAccessedTime() {
-        return 0;
-    }
-
-    @Override
-    public ServletContext getServletContext() {
-        return null;
-    }
-
-    @Override
-    public void setMaxInactiveInterval(int interval) {
-
-    }
-
-    @Override
-    public int getMaxInactiveInterval() {
-        return 0;
-    }
-
-    @Override
-    public HttpSessionContext getSessionContext() {
-        return null;
-    }
-
-    @Override
-    public Object getAttribute(String name) {
-        return this.attributes.get(name);
-    }
-
-    @Override
-    public Object getValue(String name) {
-        return this.attributes.get(name);
-    }
-
-    @Override
-    public Enumeration<String> getAttributeNames() {
-        return Collections.enumeration(this.attributes.keySet());
-    }
-
-    @Override
-    public String[] getValueNames() {
-        return null;
-    }
-
-    @Override
-    public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    @Override
-    public void putValue(String name, Object value) {
-        this.attributes.put(name, value);
-    }
-
-    @Override
-    public void removeAttribute(String name) {
-        this.attributes.remove(name);
-    }
-
-    @Override
-    public void removeValue(String name) {
-
-    }
-
-    @Override
-    public void invalidate() {
-        this.valid = false;
-    }
-
-    @Override
-    public boolean isNew() {
-        return false;
-    }
-
-    public void setId(String sessionId) {
-        this.sessionid = sessionId;
-    }
+    public long getCreationTime();
+    public void setCreationTime(long time);
+    public String getId();
+    public void setId(String id);
+    public String getInfo();
+    public long getLastAccessedTime();
+    public int getMaxInactiveInterval();
+    public void setMaxInactiveInterval(int interval);
+    public void setNew(boolean isNew);
+    public HttpSession getSession();
+    public void setValid(boolean isValid);
+    public boolean isValid();
+    public void access();
+    public void expire();
+    public void recycle();
 
 }

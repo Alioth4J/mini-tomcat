@@ -1,4 +1,4 @@
-package server;
+package server.connector.http;
 
 /**
  * HTTP 请求行，包括 method, uri, protocol
