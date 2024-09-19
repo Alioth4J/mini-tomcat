@@ -1,5 +1,7 @@
 package server.connector.http;
 
+import server.Container;
+import server.Logger;
 import server.core.StandardContext;
 import server.session.StandardSession;
 
@@ -10,6 +12,8 @@ import java.util.*;
 
 public class HttpConnector implements Runnable {
 
+    private String info = "com.alioth4j.mini-tomcat.server.http.HttpConnector/1.0";
+
     private int minProcessors = 3;
     private int maxProcessors = 10;
     private int curProcessors = 0;
@@ -18,7 +22,9 @@ public class HttpConnector implements Runnable {
 
     public static Map<String, HttpSession> sessions = new HashMap<>();
 
-    StandardContext Context = null;
+    Container container = null;
+
+    private String threadName = null;
 
     public void start() {
         new Thread(this).start();
@@ -121,16 +127,47 @@ public class HttpConnector implements Runnable {
         return result.toString();
     }
 
+    private void log(String message) {
+        Logger logger = container.getLogger();
+        String localName = threadName;
+        if (localName == null) {
+            localName = "HttpConnector";
+        }
+        if (logger != null) {
+            logger.log(localName + " " + message);
+        } else {
+            System.out.println(localName + " "  + message);
+        }
+    }
+
+    private void log(String message, Throwable throwable) {
+        Logger logger = container.getLogger();
+        String localName = threadName;
+        if (localName == null) {
+            localName = "HttpConnector";
+        }
+        if (logger != null) {
+            logger.log(localName + " " + message, throwable);
+        } else {
+            System.out.println(localName + " " + message);
+            throwable.printStackTrace(System.out);
+        }
+    }
+
     public static Map<String, HttpSession> getSessions() {
         return sessions;
     }
 
-    public StandardContext getContext() {
-        return Context;
+    public Container getContainer() {
+        return container;
     }
 
-    public void setContext(StandardContext Context) {
-        this.Context = Context;
+    public void setContainer(Container container) {
+        this.container = container;
+    }
+
+    public String getInfo() {
+        return this.info;
     }
 
 }

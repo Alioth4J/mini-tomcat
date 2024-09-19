@@ -21,6 +21,8 @@ public interface Container {
     public void removeChild(Container child);
     public Container findChild(String name);
     public Container[] findChildren();
+    public Logger getLogger();
+    public void setLogger(Logger logger);
 
     public void invoke(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException;
 

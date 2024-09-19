@@ -1,6 +1,7 @@
 package server.core;
 
 import server.Container;
+import server.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,8 @@ public abstract class ContainerBase implements Container {
 
     protected ClassLoader loader = null;
     protected String name = null;
+
+    protected Logger logger = null;
 
     public abstract String getInfo();
 
@@ -89,6 +92,42 @@ public abstract class ContainerBase implements Container {
             children.remove(child.getName());
         }
         child.setParent(null);
+    }
+
+    public Logger getLogger() {
+        if (logger != null) {
+            return logger;
+        }
+        if (parent != null) {
+            return parent.getLogger();
+        }
+        return null;
+    }
+
+    public synchronized void setLogger(Logger logger) {
+        Logger oldLogger = this.logger;
+        if (oldLogger == logger) {
+            return;
+        }
+        this.logger = logger;
+    }
+
+    protected void log(String message) {
+        Logger logger = getLogger();
+        if (logger != null) {
+            logger.log(logName() + ": " + message);
+        } else {
+            System.out.println(logName() + ": " + message);
+        }
+    }
+
+    protected String logName() {
+        String className = this.getClass().getName();
+        int period = className.lastIndexOf(".");
+        if (period >= 0) {
+            className = className.substring(period + 1);
+        }
+        return className + "[" + getName() + "]";
     }
 
 }
