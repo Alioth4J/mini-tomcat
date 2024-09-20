@@ -10,7 +10,7 @@ public interface Response {
 
     public Connector getConnector();
     public void setConnector(Connector connector);
-    public int getContextCount();
+    public int getContentCount();
     public Context getContext();
     public void setContext(Context context);
     public String getInfo();

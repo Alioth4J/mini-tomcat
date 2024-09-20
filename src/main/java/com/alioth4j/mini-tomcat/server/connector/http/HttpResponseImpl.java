@@ -1,8 +1,13 @@
 package server.connector.http;
 
+import server.Connector;
+import server.Context;
+import server.Request;
+import server.Response;
 import server.util.CookieTools;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -13,7 +18,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class HttpResponseImpl implements HttpServletResponse {
+public class HttpResponseImpl implements HttpServletResponse, Response {
 
     HttpRequestImpl request;
     OutputStream output;
@@ -121,6 +126,76 @@ public class HttpResponseImpl implements HttpServletResponse {
         outputWriter.flush();
     }
 
+    @Override
+    public Connector getConnector() {
+        return null;
+    }
+
+    @Override
+    public void setConnector(Connector connector) {
+
+    }
+
+    @Override
+    public int getContentCount() {
+        return 0;
+    }
+
+    @Override
+    public Context getContext() {
+        return null;
+    }
+
+    @Override
+    public void setContext(Context context) {
+
+    }
+
+    @Override
+    public String getInfo() {
+        return "";
+    }
+
+    @Override
+    public Request getRequest() {
+        return null;
+    }
+
+    @Override
+    public void setRequest(Request request) {
+
+    }
+
+    @Override
+    public ServletResponse getResponse() {
+        return null;
+    }
+
+    @Override
+    public OutputStream getStream() {
+        return null;
+    }
+
+    @Override
+    public void setStream(OutputStream stream) {
+
+    }
+
+    @Override
+    public void setError() {
+
+    }
+
+    @Override
+    public boolean isError() {
+        return false;
+    }
+
+    @Override
+    public ServletOutputStream createOutputStream() throws IOException {
+        return null;
+    }
+
     public void finishResponse() {
         this.writer.flush();
     }
@@ -129,8 +204,8 @@ public class HttpResponseImpl implements HttpServletResponse {
         return output;
     }
 
-    public long getContentLength() {
-        return contentLength;
+    public int getContentLength() {
+        return (int)contentLength;
     }
 
     public String getProtocol() {
@@ -280,6 +355,16 @@ public class HttpResponseImpl implements HttpServletResponse {
     }
 
     @Override
+    public PrintWriter getReporter() {
+        return null;
+    }
+
+    @Override
+    public void recycle() {
+
+    }
+
+    @Override
     public ServletOutputStream getOutputStream() throws IOException {
         return null;
     }
@@ -327,6 +412,11 @@ public class HttpResponseImpl implements HttpServletResponse {
 
     @Override
     public void resetBuffer() {
+
+    }
+
+    @Override
+    public void sendAcknowledgement() {
 
     }
 

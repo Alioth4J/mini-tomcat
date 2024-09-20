@@ -1,6 +1,8 @@
 package server.core;
 
 import server.Container;
+import server.Request;
+import server.Response;
 import server.Wrapper;
 
 import javax.servlet.Servlet;
@@ -18,6 +20,9 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
     protected Container parent = null;
 
     public StandardWrapper(String servletClass, StandardContext parent) {
+        super();
+        pipeline.setBasic(new StandardWrapperValve());
+
         this.parent = parent;
         this.servletClass = servletClass;
         try {
@@ -57,10 +62,12 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
         return servlet;
     }
 
-    public void invoke(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (instance != null) {
-            instance.service(request, response);
-        }
+    public Servlet getServlet() {
+        return this.instance;
+    }
+
+    public void invoke(Request request, Response response) throws ServletException, IOException {
+        super.invoke(request, response);
     }
 
     public Servlet getInstance() {

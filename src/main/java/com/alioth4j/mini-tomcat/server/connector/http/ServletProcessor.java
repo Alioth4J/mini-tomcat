@@ -1,5 +1,8 @@
 package server.connector.http;
 
+import server.Request;
+import server.Response;
+
 import javax.servlet.ServletException;
 import java.io.IOException;
 
@@ -11,7 +14,7 @@ public class ServletProcessor {
         this.connector = connector;
     }
 
-    public void process(HttpRequestImpl request, HttpResponseImpl response) throws ServletException, IOException {
+    public void process(Request request, Response response) throws ServletException, IOException {
         this.connector.getContainer().invoke(request, response);
     }
 

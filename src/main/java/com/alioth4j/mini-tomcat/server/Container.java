@@ -24,6 +24,6 @@ public interface Container {
     public Logger getLogger();
     public void setLogger(Logger logger);
 
-    public void invoke(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException;
+    public void invoke(Request request, Response response) throws IOException, ServletException;
 
 }

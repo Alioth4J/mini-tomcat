@@ -1,12 +1,13 @@
 package server.core;
 
-import server.Container;
-import server.Logger;
+import server.*;
 
+import javax.servlet.ServletException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ContainerBase implements Container {
+public abstract class ContainerBase implements Container, Pipeline {
 
     protected Container parent = null;
     protected Map<String, Container> children = new HashMap<>();
@@ -16,9 +17,16 @@ public abstract class ContainerBase implements Container {
 
     protected Logger logger = null;
 
+    protected Pipeline pipeline = new StandardPipeline(this);
+
+    public void invoke(Request request, Response response) throws IOException, ServletException {
+        pipeline.invoke(request, response);
+    }
+
     public abstract String getInfo();
 
-    public ClassLoader getClassLoader() {
+    @Override
+    public ClassLoader getLoader() {
         if (loader != null) {
             return loader;
         }
@@ -28,6 +36,7 @@ public abstract class ContainerBase implements Container {
         return null;
     }
 
+    @Override
     public synchronized void setLoader(ClassLoader loader) {
         ClassLoader oldLoader = this.loader;
         if (oldLoader == loader) {
@@ -36,24 +45,29 @@ public abstract class ContainerBase implements Container {
         this.loader = loader;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
 
+    @Override
     public Container getParent() {
         return parent;
     }
 
+    @Override
     public void setParent(Container container) {
         Container oldParent = this.parent;
         // ...
         this.parent = parent;
     }
 
+    @Override
     public void addChild(Container child) {
         addChildInternal(child);
     }
@@ -68,6 +82,7 @@ public abstract class ContainerBase implements Container {
         }
     }
 
+    @Override
     public Container findChild(String name) {
         if (name == null) {
             return null;
@@ -84,6 +99,7 @@ public abstract class ContainerBase implements Container {
         }
     }
 
+    @Override
     public void removeChild(Container child) {
         synchronized (children) {
             if (children.get(child.getName()) == null) {
@@ -94,6 +110,7 @@ public abstract class ContainerBase implements Container {
         child.setParent(null);
     }
 
+    @Override
     public Logger getLogger() {
         if (logger != null) {
             return logger;
@@ -104,6 +121,7 @@ public abstract class ContainerBase implements Container {
         return null;
     }
 
+    @Override
     public synchronized void setLogger(Logger logger) {
         Logger oldLogger = this.logger;
         if (oldLogger == logger) {
@@ -130,4 +148,31 @@ public abstract class ContainerBase implements Container {
         return className + "[" + getName() + "]";
     }
 
+    public Pipeline getPipeline() {
+        return pipeline;
+    }
+
+    public synchronized void addValve(Valve valve) {
+        pipeline.addValve(valve);
+    }
+
+    @Override
+    public Valve getBasic() {
+        return pipeline.getBasic();
+    }
+
+    @Override
+    public void setBasic(Valve valve) {
+        pipeline.setBasic(valve);
+    }
+
+    @Override
+    public Valve[] getValves() {
+        return pipeline.getValves();
+    }
+
+    @Override
+    public void removeValve(Valve valve) {
+        pipeline.removeValve(valve);
+    }
 }

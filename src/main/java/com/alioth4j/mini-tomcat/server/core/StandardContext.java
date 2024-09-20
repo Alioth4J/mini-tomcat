@@ -6,6 +6,7 @@ import server.connector.HttpResponseFacade;
 import server.connector.http.HttpConnector;
 import server.connector.http.HttpRequestImpl;
 import server.startup.Bootstrap;
+import server.valves.AccessLogValve;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,8 @@ public class StandardContext extends ContainerBase implements Context {
     Map<String, StandardWrapper> servletInstanceMap = new ConcurrentHashMap<>();
 
     public StandardContext() {
+        super();
+        pipeline.setBasic(new StandardContextValve());
         // ClassLoader 初始化
         try {
             URL[] urls = new URL[1];
@@ -41,16 +44,28 @@ public class StandardContext extends ContainerBase implements Context {
         log("Container created.");
     }
 
+    @Override
+    public void invoke(Request request, Response response) throws IOException, ServletException {
+        super.invoke(request, response);
+    }
+
+    public Wrapper getWrapper(String name) {
+        StandardWrapper servletWrapper = servletInstanceMap.get(name);
+        if (servletWrapper == null) {
+            String servletClassName = name;
+            servletWrapper = new StandardWrapper(servletClassName, this);
+            this.servletClsMap.put(name, servletClassName);
+            this.servletInstanceMap.put(name, servletWrapper);
+        }
+        return servletWrapper;
+    }
+
     public String getInfo() {
-        return "MiniTomcat Servlet Context, version 0.1";
+        return "MiniTomcat Servlet Context, version 1.0";
     }
 
     @Override
     public ClassLoader getLoader() {
-        return this.loader;
-    }
-
-    public ClassLoader getClassLoader() {
         return this.loader;
     }
 
@@ -76,23 +91,6 @@ public class StandardContext extends ContainerBase implements Context {
     @Override
     public Container[] findChildren() {
         return new Container[0];
-    }
-
-    @Override
-    public void invoke(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        StandardWrapper servletWrapper = null;
-        String uri = ((HttpRequestImpl) request).getUri();
-        String servletName = uri.substring(uri.lastIndexOf("/") + 1);
-        String servletClassName = servletName;
-        servletWrapper = servletInstanceMap.get(servletName);
-        if (servletWrapper == null) {
-            servletWrapper = new StandardWrapper(servletClassName, this);
-            this.servletClsMap.put(servletName, servletClassName);
-            this.servletInstanceMap.put(servletName, servletWrapper);
-        }
-        HttpRequestFacade requestFacade = new HttpRequestFacade(request);
-        HttpResponseFacade responseFacade = new HttpResponseFacade(response);
-        servletWrapper.invoke(requestFacade, responseFacade);
     }
 
     @Override
@@ -169,4 +167,5 @@ public class StandardContext extends ContainerBase implements Context {
     public void reload() {
 
     }
+
 }
