@@ -2,6 +2,8 @@ package server.startup;
 
 import server.Logger;
 import server.connector.http.HttpConnector;
+import server.core.FilterDef;
+import server.core.FilterMap;
 import server.core.StandardContext;
 import server.logger.FileLogger;
 
@@ -21,8 +23,21 @@ public class Bootstrap {
         StandardContext container = new StandardContext();
         connector.setContainer(container);
         container.setConnector(connector);
+
         Logger logger = new FileLogger();
         container.setLogger(logger);
+
+        FilterDef filterDef = new FilterDef();
+        filterDef.setFilterName("TestFilter");
+        filterDef.setFilterClass("test.TestFilter");
+        container.addFilterDef(filterDef);
+
+        FilterMap filterMap = new FilterMap();
+        filterMap.setFilterName("TestFilter");
+        filterMap.setURLPattern("/*");
+        container.addFilterMap(filterMap);
+
+        container.filterStart();
         connector.start();
     }
 

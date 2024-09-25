@@ -8,6 +8,8 @@ import server.connector.http.HttpRequestImpl;
 import server.startup.Bootstrap;
 import server.valves.AccessLogValve;
 
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,6 +29,10 @@ public class StandardContext extends ContainerBase implements Context {
 
     Map<String, String> servletClsMap = new ConcurrentHashMap<>();
     Map<String, StandardWrapper> servletInstanceMap = new ConcurrentHashMap<>();
+
+    private Map<String, ApplicationFilterConfig> filterConfigs = new ConcurrentHashMap<>();
+    private Map<String, FilterDef> filterDefs = new ConcurrentHashMap<>();
+    private FilterMap[] filterMaps = new FilterMap[0];
 
     public StandardContext() {
         super();
@@ -58,6 +65,115 @@ public class StandardContext extends ContainerBase implements Context {
             this.servletInstanceMap.put(name, servletWrapper);
         }
         return servletWrapper;
+    }
+
+    public void addFilterDef(FilterDef filterDef) {
+        filterDefs.put(filterDef.getFilterName(), filterDef);
+    }
+
+    public void addFilterMap(FilterMap filterMap) {
+        String filterName = filterMap.getFilterName();
+        String servletName = filterMap.getServletName();
+        String urlPattern = filterMap.getURLPattern();
+        if (findFilterDef(filterName) == null) {
+            throw new IllegalArgumentException("standardContext.filterMap.name: " + filterName);
+        }
+        if (servletName == null && urlPattern == null) {
+            throw new IllegalArgumentException("standardContext.filterMap.either");
+        }
+        if (servletName != null && urlPattern != null) {
+            throw new IllegalArgumentException("standardContext.filterMap.either");
+        }
+        if (urlPattern != null && !validateURLPattern(urlPattern)) {
+            throw new IllegalArgumentException("standardContext.filterMap.pattern: " + urlPattern);
+        }
+        synchronized (filterMaps) {
+            FilterMap[] results = new FilterMap[filterMaps.length + 1];
+            System.arraycopy(filterMaps, 0, results, 0, filterMaps.length);
+            results[filterMaps.length] = filterMap;
+            filterMaps = results;
+        }
+
+    }
+
+    public FilterDef findFilterDef(String filterName) {
+        return filterDefs.get(filterName);
+    }
+
+    public FilterDef[] findFilterDefs() {
+        synchronized (filterDefs) {
+            return filterDefs.values().toArray(new FilterDef[filterDefs.size()]);
+        }
+    }
+
+    public FilterMap[] findFilterMaps() {
+        return filterMaps;
+    }
+
+    public void removeFilterMap(FilterMap filterMap) {
+        synchronized (filterMaps) {
+            int n = -1;
+            for (int i = 0; i < filterMaps.length; i++) {
+                if (filterMaps[i] == filterMap) {
+                    n = i;
+                    break;
+                }
+            }
+            if (n < 0) {
+                return;
+            }
+            FilterMap[] results = new FilterMap[filterMaps.length - 1];
+            System.arraycopy(filterMaps, 0, results, 0, n);
+            System.arraycopy(filterMaps, n + 1, results, n, filterMaps.length - n - 1);
+            filterMaps = results;
+        }
+    }
+
+    public boolean filterStart() {
+        boolean ok = true;
+        synchronized (filterConfigs) {
+            filterConfigs.clear();
+            Iterator<String> names = filterDefs.keySet().iterator();
+            while (names.hasNext()) {
+                String name = names.next();
+                ApplicationFilterConfig filterConfig = null;
+                try {
+                    filterConfig = new ApplicationFilterConfig(this, filterDefs.get(name));
+                } catch (ServletException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                filterConfigs.put(name, filterConfig);
+            }
+        }
+        return ok;
+    }
+
+    public FilterConfig findFilterConfig(String name) {
+        return filterConfigs.get(name);
+    }
+
+    private boolean validateURLPattern(String urlPattern) {
+        if (urlPattern == null) {
+            return false;
+        }
+        if (urlPattern.startsWith("*.")) {
+            if (urlPattern.indexOf('/') < 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (urlPattern.startsWith("/")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public String getInfo() {
@@ -104,7 +220,7 @@ public class StandardContext extends ContainerBase implements Context {
     }
 
     @Override
-    public String etDocBase() {
+    public String getDocBase() {
         return "";
     }
 
@@ -124,7 +240,7 @@ public class StandardContext extends ContainerBase implements Context {
     }
 
     @Override
-    public StandardContext getServletContext() {
+    public ServletContext getServletContext() {
         return null;
     }
 

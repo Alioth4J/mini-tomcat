@@ -2,17 +2,19 @@ package server;
 
 import server.core.StandardContext;
 
+import javax.servlet.ServletContext;
+
 public interface Context extends Container {
 
     public static final String RELOAD_EVENT = "reload";
 
     public String getDisplayName();
     public void setDisplayName(String displayName);
-    public String etDocBase();
+    public String getDocBase();
     public void setDocBase(String docBase);
     public String getPath();
     public void setPath(String path);
-    public StandardContext getServletContext();
+    public ServletContext getServletContext();
     public int getSessionTimeout();
     public void setSessionTimeout(int timeout);
     public String getWrapperClass();
