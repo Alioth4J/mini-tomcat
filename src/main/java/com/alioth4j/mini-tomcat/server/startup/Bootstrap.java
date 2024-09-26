@@ -2,6 +2,7 @@ package server.startup;
 
 import server.Logger;
 import server.connector.http.HttpConnector;
+import server.core.ContainerListenerDef;
 import server.core.FilterDef;
 import server.core.FilterMap;
 import server.core.StandardContext;
@@ -36,6 +37,12 @@ public class Bootstrap {
         filterMap.setFilterName("TestFilter");
         filterMap.setURLPattern("/*");
         container.addFilterMap(filterMap);
+
+        ContainerListenerDef listenerDef = new ContainerListenerDef();
+        listenerDef.setListenerName("TestListener");
+        listenerDef.setListenerClass("test.TestListener");
+        container.addListenerDef(listenerDef);
+        container.listenerStart();
 
         container.filterStart();
         connector.start();

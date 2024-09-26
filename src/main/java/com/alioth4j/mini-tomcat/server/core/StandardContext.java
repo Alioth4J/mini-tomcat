@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,6 +29,9 @@ public class StandardContext extends ContainerBase implements Context {
     private Map<String, ApplicationFilterConfig> filterConfigs = new ConcurrentHashMap<>();
     private Map<String, FilterDef> filterDefs = new ConcurrentHashMap<>();
     private FilterMap[] filterMaps = new FilterMap[0];
+
+    private List<ContainerListenerDef> listenerDefs = new ArrayList<>();
+    private List<ContainerListener> listeners = new ArrayList<>();
 
     public StandardContext() {
         super();
@@ -168,6 +173,63 @@ public class StandardContext extends ContainerBase implements Context {
         } else {
             return false;
         }
+    }
+
+    public void addListenerDef(ContainerListenerDef listenerDef) {
+        synchronized (listenerDefs) {
+            this.listenerDefs.add(listenerDef);
+        }
+    }
+
+    public void addContainerListener(ContainerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    public void removeContainerListener(ContainerListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    public void start() {
+        fireContainerEvent("Container started", this);
+    }
+
+    public void fireContainerEvent(String type, Object data) {
+        if (listeners.size() < 1) {
+            return;
+        }
+        ContainerEvent event = new ContainerEvent(this, type, data);
+        // 为了并发安全，转到一个数组中，再遍历
+        ContainerListener[] list = new ContainerListener[0];
+        synchronized (listeners) {
+            list = listeners.toArray(list);
+        }
+        for (int i = 0; i < list.length; i++) {
+            list[i].containerEvent(event);
+        }
+    }
+
+    public boolean listenerStart() {
+        System.out.println("Listener Start.........");
+        boolean ok = true;
+        synchronized (listeners) {
+            listeners.clear();
+            Iterator<ContainerListenerDef> defs = listenerDefs.iterator();
+            while (defs.hasNext()) {
+                ContainerListenerDef def = defs.next();
+                try {
+                    ContainerListener listener = (ContainerListener) (this.getLoader().loadClass(def.getListenerClass()).newInstance());
+                    addContainerListener(listener);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    ok = false;
+                }
+            }
+        }
+        return ok;
     }
 
     public String getInfo() {
