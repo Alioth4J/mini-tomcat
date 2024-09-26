@@ -1,18 +1,12 @@
 package server.core;
 
 import server.*;
-import server.connector.HttpRequestFacade;
-import server.connector.HttpResponseFacade;
 import server.connector.http.HttpConnector;
-import server.connector.http.HttpRequestImpl;
 import server.startup.Bootstrap;
-import server.valves.AccessLogValve;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;

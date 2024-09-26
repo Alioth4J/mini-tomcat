@@ -28,7 +28,6 @@ public class StandardWrapperValve extends ValveBase {
         filterChain.release();
     }
 
-    // TODO 这边没看懂
     private ApplicationFilterChain createFilterChain(Request request, Servlet servlet) {
         if (servlet == null) {
             return null;
@@ -45,14 +44,15 @@ public class StandardWrapperValve extends ValveBase {
         if (request instanceof HttpServletRequest) {
             String contextPath = "";
             String requestURI = ((HttpRequestImpl)request).getUri();
-            // TODO ?
-            if (requestURI.length() >= contextPath.length()) {
-                requestPath = requestURI.substring(contextPath.length());
-            }
+//            if (requestURI.length() >= contextPath.length()) {
+//                requestPath = requestURI.substring(contextPath.length());
+//            }
+            requestPath = requestURI;
         }
         String servletName = wrapper.getName();
 
         int n = 0;
+        // 匹配 URL
         for (int i = 0; i < filterMaps.length; i++) {
             if (!matchFiltersURL(filterMaps[i], requestPath)) {
                 continue;
@@ -64,6 +64,7 @@ public class StandardWrapperValve extends ValveBase {
             filterChain.addFilter(filterConfig);
             n++;
         }
+        // 匹配 Servlet
         for (int i = 0; i < filterMaps.length; i++) {
             if (!matchFiltersServlet(filterMaps[i], servletName)) {
                 continue;
