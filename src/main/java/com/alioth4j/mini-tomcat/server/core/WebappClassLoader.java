@@ -62,7 +62,7 @@ public class WebappClassLoader {
             }
             URLStreamHandler streamHandler = null;
             urls[0] = new URL(null, repository, streamHandler);
-            classLoader = new URLClassLoader();
+            classLoader = new URLClassLoader(urls);
         } catch (IOException e) {
             e.printStackTrace();
         }
