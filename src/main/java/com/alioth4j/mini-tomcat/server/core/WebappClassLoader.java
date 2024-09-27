@@ -8,7 +8,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
 
-public class WebappClassLoader {
+public class WebappClassLoader extends ClassLoader {
 
     ClassLoader classLoader;
     String path;

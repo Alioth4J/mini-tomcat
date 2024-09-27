@@ -1,12 +1,7 @@
 package server.startup;
 
-import server.Logger;
 import server.connector.http.HttpConnector;
-import server.core.ContainerListenerDef;
-import server.core.FilterDef;
-import server.core.FilterMap;
-import server.core.StandardContext;
-import server.logger.FileLogger;
+import server.core.*;
 
 import java.io.File;
 
@@ -17,37 +12,22 @@ public class Bootstrap {
     private static int debug = 0;
 
     public static void main(String[] args) {
+        // 记录日志
         if (debug >= 1) {
             log("..... startup .....");
         }
-
+        // 设置系统属性
         System.setProperty("mini-tomcat.base", WEB_ROOT);
-
+        // 创建 Connector 和 Container
         HttpConnector connector = new HttpConnector();
-        StandardContext container = new StandardContext();
+        StandardHost container = new StandardHost();
+        WebappClassLoader loader = new WebappClassLoader();
+        container.setLoader(loader);
+        // 互相持有
         connector.setContainer(container);
         container.setConnector(connector);
-
-        Logger logger = new FileLogger();
-        container.setLogger(logger);
-
-        FilterDef filterDef = new FilterDef();
-        filterDef.setFilterName("TestFilter");
-        filterDef.setFilterClass("test.TestFilter");
-        container.addFilterDef(filterDef);
-
-        FilterMap filterMap = new FilterMap();
-        filterMap.setFilterName("TestFilter");
-        filterMap.setURLPattern("/*");
-        container.addFilterMap(filterMap);
-
-        ContainerListenerDef listenerDef = new ContainerListenerDef();
-        listenerDef.setListenerName("TestListener");
-        listenerDef.setListenerClass("test.TestListener");
-        container.addListenerDef(listenerDef);
-        container.listenerStart();
-
-        container.filterStart();
+        // 启动
+        container.start();
         connector.start();
     }
 
