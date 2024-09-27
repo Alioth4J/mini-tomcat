@@ -33,6 +33,7 @@ public class HttpRequestImpl implements HttpServletRequest, Request {
     HttpSession session;
     String sessionid;
     StandardSessionFacade sessionFacade;
+    String docbase;
 
     private HttpResponseImpl response;
 
@@ -65,7 +66,6 @@ public class HttpRequestImpl implements HttpServletRequest, Request {
         if (question >= 0) {
             queryString = new String(requestLine.getUri(), question + 1, requestLine.getUriEnd() - question - 1);
             uri = new String(requestLine.getUri(), 0, question);
-
         } else {
             queryString = null;
             uri = new String(requestLine.getUri(), 0, requestLine.getUriEnd());
@@ -76,6 +76,12 @@ public class HttpRequestImpl implements HttpServletRequest, Request {
         if (semicolon >= 0) {
             sessionid = uri.substring(semicolon + tmp.length());
             uri = uri.substring(0, semicolon);
+        }
+        // 从 uri 中得到 context
+        int contextSlash = uri.indexOf("/", 1);
+        if (contextSlash != -1) {
+            this.docbase = uri.substring(1, contextSlash);
+            uri = uri.substring(contextSlash);
         }
     }
 
@@ -767,4 +773,13 @@ public class HttpRequestImpl implements HttpServletRequest, Request {
     public void setServerPort(int port) {
 
     }
+
+    public String getDocbase() {
+        return docbase;
+    }
+
+    public void setDocbase(String docbase) {
+        this.docbase = docbase;
+    }
+    
 }

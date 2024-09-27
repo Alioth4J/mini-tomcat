@@ -20,6 +20,9 @@ public class Bootstrap {
         if (debug >= 1) {
             log("..... startup .....");
         }
+
+        System.setProperty("mini-tomcat.base", WEB_ROOT);
+
         HttpConnector connector = new HttpConnector();
         StandardContext container = new StandardContext();
         connector.setContainer(container);
