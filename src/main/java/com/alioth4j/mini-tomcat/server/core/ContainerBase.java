@@ -12,7 +12,7 @@ public abstract class ContainerBase implements Container, Pipeline {
     protected Container parent = null;
     protected Map<String, Container> children = new HashMap<>();
 
-    protected ClassLoader loader = null;
+    protected Loader loader = null;
     protected String name = null;
 
     protected Logger logger = null;
@@ -26,7 +26,7 @@ public abstract class ContainerBase implements Container, Pipeline {
     public abstract String getInfo();
 
     @Override
-    public ClassLoader getLoader() {
+    public Loader getLoader() {
         if (loader != null) {
             return loader;
         }
@@ -37,8 +37,8 @@ public abstract class ContainerBase implements Container, Pipeline {
     }
 
     @Override
-    public synchronized void setLoader(ClassLoader loader) {
-        ClassLoader oldLoader = this.loader;
+    public synchronized void setLoader(Loader loader) {
+        Loader oldLoader = this.loader;
         if (oldLoader == loader) {
             return;
         }

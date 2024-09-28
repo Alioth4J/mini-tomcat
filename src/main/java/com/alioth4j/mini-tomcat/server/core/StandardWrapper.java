@@ -1,21 +1,16 @@
 package server.core;
 
-import server.Container;
-import server.Request;
-import server.Response;
-import server.Wrapper;
+import server.*;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class StandardWrapper extends ContainerBase implements Wrapper {
 
     private Servlet instance;
     private String servletClass;
-    private ClassLoader loader;
+    private Loader loader;
     private String name;
     protected Container parent = null;
 
@@ -41,11 +36,11 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
         if (actualClass == null) {
             throw new ServletException("Servlet class has not been specified");
         }
-        ClassLoader classLoader = getLoader();
+        Loader classLoader = getLoader();
         Class classClass = null;
         try {
             if (classLoader != null) {
-                classClass = classLoader.loadClass(actualClass);
+                classClass = classLoader.getClassLoader().loadClass(actualClass);
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -127,12 +122,12 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
     }
 
     @Override
-    public void setLoader(ClassLoader loader) {
+    public void setLoader(Loader loader) {
         this.loader = loader;
     }
 
     @Override
-    public ClassLoader getLoader() {
+    public Loader getLoader() {
         return loader;
     }
 
@@ -172,7 +167,7 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
 
     @Override
     public Container[] findChildren() {
-        return new Container[0];
+        return null;
     }
 
     @Override

@@ -3,31 +3,31 @@ package server.core;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-public class WebappClassLoader extends URLClassLoader {
+public class CommonClassLoader extends URLClassLoader {
 
     protected boolean delegate = false;
     private ClassLoader parent = null;
     private ClassLoader system = null;
 
-    public WebappClassLoader() {
+    public CommonClassLoader() {
         super(new URL[0]);
         this.parent = getParent();
         this.system = getSystemClassLoader();
     }
 
-    public WebappClassLoader(URL[] urls) {
+    public CommonClassLoader(URL[] urls) {
         super(urls);
         this.parent = getParent();
         this.system = getSystemClassLoader();
     }
 
-    public WebappClassLoader(ClassLoader parent) {
+    public CommonClassLoader(ClassLoader parent) {
         super(new URL[0], parent);
         this.parent = parent;
         this.system = getSystemClassLoader();
     }
 
-    public WebappClassLoader(URL[] urls, ClassLoader parent) {
+    public CommonClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
         this.parent = parent;
         this.system = getSystemClassLoader();
@@ -49,13 +49,13 @@ public class WebappClassLoader extends URLClassLoader {
         return clazz;
     }
 
-    public Class<?> loadClass(String name) throws ClassNotFoundException {
+    public Class loadClass(String name) throws ClassNotFoundException {
         return loadClass(name, false);
     }
 
-    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    public Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> clazz = null;
-        // 系统类加载器
+        // 系统类加载器加载
         clazz = system.loadClass(name);
         if (clazz != null) {
             if (resolve) {
@@ -63,8 +63,9 @@ public class WebappClassLoader extends URLClassLoader {
             }
             return clazz;
         }
-        // 双亲委派
-        if (delegate) {
+        // 委托代理模式
+        boolean delegateLoad = this.delegate;
+        if (delegateLoad) {
             ClassLoader loader = parent;
             if (loader == null) {
                 loader = system;
@@ -77,7 +78,7 @@ public class WebappClassLoader extends URLClassLoader {
                 return clazz;
             }
         }
-        // 自己加载
+        // 搜索本地存储库，自己加载
         clazz = findClass(name);
         if (clazz != null) {
             if (resolve) {
@@ -85,7 +86,20 @@ public class WebappClassLoader extends URLClassLoader {
             }
             return clazz;
         }
-        // 无法加载
+        // 委托给父类
+        if (!delegateLoad) {
+            ClassLoader loader = parent;
+            if (loader == null) {
+                loader = system;
+            }
+            clazz = loader.loadClass(name);
+            if (clazz != null) {
+                if (resolve) {
+                    resolveClass(clazz);
+                }
+                return clazz;
+            }
+        }
         throw new ClassNotFoundException(name);
     }
 

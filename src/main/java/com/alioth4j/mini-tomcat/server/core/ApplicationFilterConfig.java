@@ -1,6 +1,7 @@
 package server.core;
 
 import server.Context;
+import server.Loader;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
@@ -53,9 +54,9 @@ final class ApplicationFilterConfig implements FilterConfig {
         if (this.filter != null) {
             return this.filter;
         }
-        ClassLoader classLoader = context.getLoader();
+        Loader classLoader = context.getLoader();
         String filterClass = filterDef.getFilterClass();
-        Class<?> clazz = classLoader.loadClass(filterClass);
+        Class<?> clazz = classLoader.getClassLoader().loadClass(filterClass);
         this.filter = (Filter) clazz.newInstance();
         this.filter.init(this);
         return this.filter;

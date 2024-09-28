@@ -4,6 +4,7 @@ import server.Container;
 import server.Logger;
 import server.core.StandardContext;
 import server.session.StandardSession;
+import server.startup.Bootstrap;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -34,9 +35,8 @@ public class HttpConnector implements Runnable {
     public void run() {
         // 创建 ServerSocket
         ServerSocket serverSocket = null;
-        int port = 8080;
         try {
-            serverSocket = new ServerSocket(port, 1, InetAddress.getByName("127.0.0.1"));
+            serverSocket = new ServerSocket(Bootstrap.PORT, 1, InetAddress.getByName("127.0.0.1"));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);

@@ -11,8 +11,8 @@ public interface Container {
     public static final String REMOVE_CHILD_EVENT = "removeChild";
 
     public String getInfo();
-    public ClassLoader getLoader();
-    public void setLoader(ClassLoader loader);
+    public Loader getLoader();
+    public void setLoader(Loader loader);
     public String getName();
     public void setName(String name);
     public Container getParent();

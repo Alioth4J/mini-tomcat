@@ -49,7 +49,7 @@ public class StandardHost extends ContainerBase {
             context = new StandardContext();
             context.setDocBase(name);
             context.setConnector(connector);
-            WebappClassLoader loader = new WebappClassLoader();
+            Loader loader = new WebappLoader(name, this.loader.getClassLoader());
             context.setLoader(loader);
             loader.start();
             contextMap.put(name, context);
@@ -116,7 +116,7 @@ public class StandardHost extends ContainerBase {
             while (defs.hasNext()) {
                 ContainerListenerDef def = defs.next();
                 try {
-                    ContainerListener listener = (ContainerListener) (this.getLoader().loadClass(def.getListenerClass()).newInstance());
+                    ContainerListener listener = (ContainerListener) (this.getLoader().getClassLoader().loadClass(def.getListenerClass()).newInstance());
                     addContainerListener(listener);
                 } catch (Throwable t) {
                     t.printStackTrace();

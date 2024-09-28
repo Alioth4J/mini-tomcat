@@ -2,6 +2,7 @@ package server.core;
 
 import server.*;
 import server.connector.http.HttpConnector;
+import server.logger.FileLogger;
 import server.startup.Bootstrap;
 
 import javax.servlet.FilterConfig;
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StandardContext extends ContainerBase implements Context {
 
     HttpConnector connector = null;
-    ClassLoader loader = null;
+    Loader loader = null;
 
     Map<String, String> servletClsMap = new ConcurrentHashMap<>();
     Map<String, StandardWrapper> servletInstanceMap = new ConcurrentHashMap<>();
@@ -37,16 +38,16 @@ public class StandardContext extends ContainerBase implements Context {
         super();
         pipeline.setBasic(new StandardContextValve());
         // ClassLoader 初始化
-        try {
-            URL[] urls = new URL[1];
-            File classPath = new File(Bootstrap.WEB_ROOT);
-            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
-            URLStreamHandler streamHandler = null;
-            urls[0] = new URL(null, repository, streamHandler);
-            loader = new URLClassLoader(urls);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            URL[] urls = new URL[1];
+//            File classPath = new File(Bootstrap.WEB_ROOT);
+//            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
+//            URLStreamHandler streamHandler = null;
+//            urls[0] = new URL(null, repository, streamHandler);
+//            loader = new URLClassLoader(urls);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         log("Container created.");
     }
 
@@ -195,6 +196,26 @@ public class StandardContext extends ContainerBase implements Context {
 
     public void start() {
         fireContainerEvent("Container started", this);
+
+        Logger logger = new FileLogger();
+        setLogger(logger);
+
+        FilterDef filterDef = new FilterDef();
+        filterDef.setFilterName("TestFilter");
+        filterDef.setFilterClass("test.TestFilter");
+        addFilterDef(filterDef);
+
+        FilterMap filterMap = new FilterMap();
+        filterMap.setFilterName("TestFilter");
+        filterMap.setURLPattern("/*");
+        addFilterMap(filterMap);
+
+        filterStart();
+
+        ContainerListenerDef listenerDef = new ContainerListenerDef();
+        listenerDef.setListenerName("TestFilter");
+        listenerDef.setListenerClass("test.TestListener");
+        listenerStart();
     }
 
     public void fireContainerEvent(String type, Object data) {
@@ -221,7 +242,7 @@ public class StandardContext extends ContainerBase implements Context {
             while (defs.hasNext()) {
                 ContainerListenerDef def = defs.next();
                 try {
-                    ContainerListener listener = (ContainerListener) (this.getLoader().loadClass(def.getListenerClass()).newInstance());
+                    ContainerListener listener = (ContainerListener) (this.getLoader().getClassLoader().loadClass(def.getListenerClass()).newInstance());
                     addContainerListener(listener);
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -237,11 +258,11 @@ public class StandardContext extends ContainerBase implements Context {
     }
 
     @Override
-    public ClassLoader getLoader() {
+    public Loader getLoader() {
         return this.loader;
     }
 
-    public void setLoader(ClassLoader loader) {
+    public void setLoader(Loader loader) {
         this.loader = loader;
     }
 
