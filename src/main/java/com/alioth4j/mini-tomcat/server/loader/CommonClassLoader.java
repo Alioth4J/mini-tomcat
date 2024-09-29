@@ -1,4 +1,4 @@
-package server.core;
+package server.loader;
 
 import java.net.URL;
 import java.net.URLClassLoader;

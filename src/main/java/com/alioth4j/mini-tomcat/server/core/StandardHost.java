@@ -2,9 +2,11 @@ package server.core;
 
 import server.*;
 import server.connector.http.HttpConnector;
+import server.loader.WebappLoader;
 import server.logger.FileLogger;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,6 +38,12 @@ public class StandardHost extends ContainerBase {
         listenerDef.setListenerClass("test.TestListener");
         addListenerDef(listenerDef);
         listenerStart();
+        // 再 /webapps 目录加载所有上下文
+        File classPath = new File(System.getProperty("mini-tomcat.base"));
+        String[] dirs = classPath.list();
+        for (int i = 0; i < dirs.length; i++) {
+            getContext(dirs[i]);
+        }
     }
 
     /**
@@ -52,6 +60,7 @@ public class StandardHost extends ContainerBase {
             Loader loader = new WebappLoader(name, this.loader.getClassLoader());
             context.setLoader(loader);
             loader.start();
+            context.start();
             contextMap.put(name, context);
         }
         return context;

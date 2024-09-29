@@ -19,6 +19,9 @@ public abstract class ContainerBase implements Container, Pipeline {
 
     protected Pipeline pipeline = new StandardPipeline(this);
 
+    protected String path;
+    protected String docbase;
+
     public void invoke(Request request, Response response) throws IOException, ServletException {
         pipeline.invoke(request, response);
     }

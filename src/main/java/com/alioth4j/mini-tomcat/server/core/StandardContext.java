@@ -1,18 +1,18 @@
 package server.core;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import server.*;
 import server.connector.http.HttpConnector;
 import server.logger.FileLogger;
-import server.startup.Bootstrap;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLStreamHandler;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -200,22 +200,67 @@ public class StandardContext extends ContainerBase implements Context {
         Logger logger = new FileLogger();
         setLogger(logger);
 
-        FilterDef filterDef = new FilterDef();
-        filterDef.setFilterName("TestFilter");
-        filterDef.setFilterClass("test.TestFilter");
-        addFilterDef(filterDef);
-
-        FilterMap filterMap = new FilterMap();
-        filterMap.setFilterName("TestFilter");
-        filterMap.setURLPattern("/*");
-        addFilterMap(filterMap);
-
-        filterStart();
-
-        ContainerListenerDef listenerDef = new ContainerListenerDef();
-        listenerDef.setListenerName("TestFilter");
-        listenerDef.setListenerClass("test.TestListener");
-        listenerStart();
+        // 解析 web.xml
+        String file = System.getProperty("mini-tomcat.base") + File.separator + docbase + File.separator + "WEB-INF" + File.separator + "web.xml";
+        SAXReader reader = new SAXReader();
+        try {
+            Document document = reader.read(file);
+            Element root = document.getRootElement();
+            // listeners
+            List<Element> listeners = root.elements("listener");
+            for (Element listener : listeners) {
+                Element listenerClass = listener.element("listener-class");
+                String listenerClassName = listenerClass.getText();
+                ContainerListenerDef listenerDef = new ContainerListenerDef();
+                listenerDef.setListenerName(listenerClassName);
+                listenerDef.setListenerClass(listenerClassName);
+                addListenerDef(listenerDef);
+            }
+            // filters
+            List<Element> filters = root.elements("filter");
+            for (Element filter : filters) {
+                Element filterName = filter.element("filter-name");
+                String filterNameText = filterName.getText();
+                Element filterClass = filter.element("filter-class");
+                String filterClassText = filterClass.getText();
+                FilterDef filterDef = new FilterDef();
+                filterDef.setFilterName(filterNameText);
+                filterDef.setFilterClass(filterClassText);
+                addFilterDef(filterDef);
+            }
+            // filter 映射
+            List<Element> filtermaps = root.elements("filter-mapping");
+            for (Element filtermap : filtermaps) {
+                Element filetername = filtermap.element("filter-name");
+                String fileternamestr = filetername.getText();
+                Element urlpattern = filtermap.element("url-pattern");
+                String urlpatternstr = urlpattern.getText();
+                FilterMap filterMap = new FilterMap();
+                filterMap.setFilterName(fileternamestr);
+                filterMap.setURLPattern(urlpatternstr);
+                addFilterMap(filterMap);
+            }
+            filterStart();
+            // servlet
+            List<Element> servlets = root.elements("servlet");
+            for (Element servlet : servlets) {
+                Element servletname = servlet.element("servlet-name");
+                String servletnamestr = servletname.getText();
+                Element servletclass = servlet.element("servlet-class");
+                String servletclassstr = servletclass.getText();
+                Element loadonstartup = servlet.element("load-on-startup");
+                String loadonstartupstr = null;
+                if (loadonstartup != null) {
+                    loadonstartupstr = loadonstartup.getText();
+                }
+                this.servletClsMap.put(servletnamestr, servletclassstr);
+                if (loadonstartupstr != null) {
+                    getWrapper(servletnamestr);
+                }
+            }
+        } catch (DocumentException e) {
+            e.printStackTrace();
+        }
     }
 
     public void fireContainerEvent(String type, Object data) {
@@ -298,12 +343,12 @@ public class StandardContext extends ContainerBase implements Context {
 
     @Override
     public String getDocBase() {
-        return "";
+        return docbase;
     }
 
     @Override
     public void setDocBase(String docBase) {
-
+        this.docbase = docBase;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package server.core;
+package server.loader;
 
 import server.Container;
 import server.Loader;
